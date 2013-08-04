@@ -34,13 +34,15 @@ CONFIG_DEFAULT = begin
     "namespaces" => { "abj" => "com.twitter.ads.batch.job", "s" => "com.twitter.scalding" },
     "hadoop_opts" => { "mapred.reduce.tasks" => 20, #be conservative by default
                        "mapred.min.split.size" => "2000000000" }, #2 billion bytes!!!
-    "depends" => [ "org.apache.hadoop/hadoop-core/0.20.2",
+    "depends" => [ "org.apache.hadoop/hadoop-core/2.0.0-mr1-cdh4.3.0",
+                   "org.apache.hadoop/hadoop-common/2.0.0-cdh4.3.0",
+                   "org.apache.zookeeper/zookeeper/3.4.5-cdh4.3.0",
                    "org.slf4j/slf4j-log4j12/1.6.6",
                    "log4j/log4j/1.2.15",
                    "commons-httpclient/commons-httpclient/3.1",
-                   "commons-cli/commons-cli/1.2",
-                   "org.apache.zookeeper/zookeeper/3.3.4" ],
-    "default_mode" => "--hdfs"
+                   "commons-cli/commons-cli/1.2"],
+    "default_mode" => "--hdfs",
+    "tmpdir" => repo_root + "/tmp"
   }
 end
 ##############################################################
@@ -235,7 +237,9 @@ def dependency_to_url(dependency)
   group, artifact, version = dependency.split("/")
   jar_filename = dependency_to_jar(dependency)
   group_with_slash = group.split(".").join("/")
-  "http://repo1.maven.org/maven2/#{group_with_slash}/#{artifact}/#{version}/#{jar_filename}"
+  mvn_repo_url = /cdh/ =~ jar_filename ? "https://repository.cloudera.com/artifactory/cloudera-repos" : "http://repo1.maven.org/maven2"
+
+  "#{mvn_repo_url}/#{group_with_slash}/#{artifact}/#{version}/#{jar_filename}"
 end
 
 #Convert a maven dependency to the name of its jar file.

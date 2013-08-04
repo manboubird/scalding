@@ -28,7 +28,8 @@ object ScaldingBuild extends Build {
     resolvers ++= Seq(
       "snapshots" at "http://oss.sonatype.org/content/repositories/snapshots",
       "releases"  at "http://oss.sonatype.org/content/repositories/releases",
-      "Concurrent Maven Repo" at "http://conjars.org/repo"
+      "Concurrent Maven Repo" at "http://conjars.org/repo",
+      "cloudera-releases" at "https://repository.cloudera.com/artifactory/cloudera-repos"
     ),
 
     parallelExecution in Test := false,
@@ -134,6 +135,8 @@ object ScaldingBuild extends Build {
   )
 
   lazy val cascadingVersion = System.getenv.asScala.getOrElse("SCALDING_CASCADING_VERSION", "2.1.6")
+  lazy val hadoopCoreVersion = "2.0.0-mr1-cdh4.3.0"
+  lazy val hadoopCommonVersion = "2.0.0-cdh4.3.0"
 
   lazy val scaldingCore = Project(
     id = "scalding-core",
@@ -152,7 +155,8 @@ object ScaldingBuild extends Build {
       "com.twitter" %% "algebird-core" % "0.1.13",
       "commons-lang" % "commons-lang" % "2.4",
       "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.1.3",
-      "org.apache.hadoop" % "hadoop-core" % "0.20.2" % "provided",
+      "org.apache.hadoop" % "hadoop-core" % hadoopCoreVersion % "provided",
+      "org.apache.hadoop" % "hadoop-client" % hadoopCommonVersion % "provided",
       "org.slf4j" % "slf4j-api" % "1.6.6",
       "org.slf4j" % "slf4j-log4j12" % "1.6.6" % "provided"
     )
