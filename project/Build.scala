@@ -156,7 +156,7 @@ object ScaldingBuild extends Build {
       "commons-lang" % "commons-lang" % "2.4",
       "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.1.3",
       "org.apache.hadoop" % "hadoop-core" % hadoopCoreVersion % "provided",
-      "org.apache.hadoop" % "hadoop-client" % hadoopCommonVersion % "provided",
+      "org.apache.hadoop" % "hadoop-common" % hadoopCommonVersion % "provided",
       "org.slf4j" % "slf4j-api" % "1.6.6",
       "org.slf4j" % "slf4j-log4j12" % "1.6.6" % "provided"
     )
