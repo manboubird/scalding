@@ -16,7 +16,7 @@ object ScaldingBuild extends Build {
     organization := "com.twitter",
 
     //TODO: Change to 2.10.* when Twitter moves to Scala 2.10 internally
-    scalaVersion := "2.9.3",
+    scalaVersion := "2.10.3",
 
     crossScalaVersions := Seq("2.9.3", "2.10.3"),
 
@@ -35,6 +35,7 @@ object ScaldingBuild extends Build {
       "releases" at "http://oss.sonatype.org/content/repositories/releases",
       "Concurrent Maven Repo" at "http://conjars.org/repo",
       "Clojars Repository" at "http://clojars.org/repo",
+      "cloudera-releases" at "https://repository.cloudera.com/artifactory/cloudera-repos",
       "Twitter Maven" at "http://maven.twttr.com"
     ),
 
@@ -48,7 +49,7 @@ object ScaldingBuild extends Build {
     scalacOptions ++= Seq("-unchecked", "-deprecation"),
 
     // Uncomment if you don't want to run all the tests before building assembly
-    // test in assembly := {},
+    test in assembly := {},
 
     // Publishing options:
 
@@ -178,7 +179,9 @@ object ScaldingBuild extends Build {
   lazy val cascadingJDBCVersion =
     System.getenv.asScala.getOrElse("SCALDING_CASCADING_JDBC_VERSION", "2.5.2")
 
-  val hadoopVersion = "1.1.2"
+  val hadoopCoreVersion = "2.0.0-mr1-cdh4.5.0"
+  val hadoopCommonVersion = "2.0.0-cdh4.5.0"
+
   val algebirdVersion = "0.5.0"
   val bijectionVersion = "0.6.2"
   val chillVersion = "0.3.6"
@@ -194,7 +197,8 @@ object ScaldingBuild extends Build {
       "com.twitter" % "chill-java" % chillVersion,
       "com.twitter" %% "bijection-core" % bijectionVersion,
       "com.twitter" %% "algebird-core" % algebirdVersion,
-      "org.apache.hadoop" % "hadoop-core" % hadoopVersion % "provided",
+      "org.apache.hadoop" % "hadoop-core" % hadoopCoreVersion % "provided",
+      "org.apache.hadoop" % "hadoop-common" % hadoopCommonVersion % "provided",
       "org.slf4j" % "slf4j-api" % slf4jVersion,
       "org.slf4j" % "slf4j-log4j12" % slf4jVersion % "provided"
     )
@@ -237,7 +241,8 @@ object ScaldingBuild extends Build {
       "cascading.avro" % "avro-scheme" % "2.1.2",
       "org.apache.avro" % "avro" % "1.7.4",
       "org.slf4j" % "slf4j-api" % slf4jVersion,
-      "org.apache.hadoop" % "hadoop-core" % hadoopVersion % "provided",
+      "org.apache.hadoop" % "hadoop-core" % hadoopCoreVersion % "provided",
+      "org.apache.hadoop" % "hadoop-common" % hadoopCommonVersion % "provided",
       "org.slf4j" % "slf4j-log4j12" % slf4jVersion % "test",
       "org.scalacheck" %% "scalacheck" % "1.10.0" % "test",
       "org.scala-tools.testing" %% "specs" % "1.6.9" % "test"
@@ -255,7 +260,8 @@ object ScaldingBuild extends Build {
     libraryDependencies ++= Seq(
       "com.twitter" % "parquet-cascading" % "1.4.0",
       "org.slf4j" % "slf4j-api" % slf4jVersion,
-      "org.apache.hadoop" % "hadoop-core" % hadoopVersion % "provided",
+      "org.apache.hadoop" % "hadoop-core" % hadoopCoreVersion % "provided",
+      "org.apache.hadoop" % "hadoop-common" % hadoopCommonVersion % "provided",
       "org.slf4j" % "slf4j-log4j12" % slf4jVersion % "test",
       "org.scalacheck" %% "scalacheck" % "1.10.0" % "test",
       "org.scala-tools.testing" %% "specs" % "1.6.9" % "test"
@@ -272,7 +278,8 @@ object ScaldingBuild extends Build {
     libraryDependencies <++= (scalaVersion) { scalaVersion => Seq(
       "org.scala-lang" % "jline" % scalaVersion,
       "org.scala-lang" % "scala-compiler" % scalaVersion,
-      "org.apache.hadoop" % "hadoop-core" % hadoopVersion % "provided"
+      "org.apache.hadoop" % "hadoop-core" % hadoopCoreVersion % "provided",
+      "org.apache.hadoop" % "hadoop-common" % hadoopCommonVersion % "provided"
     )
     }
   ).dependsOn(scaldingCore)
@@ -285,7 +292,8 @@ object ScaldingBuild extends Build {
     name := "scalding-json",
     previousArtifact := None,
     libraryDependencies <++= (scalaVersion) { scalaVersion => Seq(
-      "org.apache.hadoop" % "hadoop-core" % hadoopVersion % "provided",
+      "org.apache.hadoop" % "hadoop-core" % hadoopCoreVersion % "provided",
+      "org.apache.hadoop" % "hadoop-common" % hadoopCommonVersion % "provided",
       "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.2.3"
     )
     }
@@ -299,7 +307,8 @@ object ScaldingBuild extends Build {
     name := "scalding-jdbc",
     previousArtifact := None,
     libraryDependencies <++= (scalaVersion) { scalaVersion => Seq(
-      "org.apache.hadoop" % "hadoop-core" % hadoopVersion % "provided",
+      "org.apache.hadoop" % "hadoop-core" % hadoopCoreVersion % "provided",
+      "org.apache.hadoop" % "hadoop-common" % hadoopCommonVersion % "provided",
       "cascading" % "cascading-jdbc-core" % cascadingJDBCVersion
     )
     }
@@ -315,7 +324,8 @@ object ScaldingBuild extends Build {
     crossPaths := false,
     autoScalaLibrary := false,
     libraryDependencies <++= (scalaVersion) { scalaVersion => Seq(
-      "org.apache.hadoop" % "hadoop-core" % hadoopVersion % "provided",
+      "org.apache.hadoop" % "hadoop-core" % hadoopCoreVersion % "provided",
+      "org.apache.hadoop" % "hadoop-common" % hadoopCommonVersion % "provided",
       "org.apache.hbase" % "hbase" % "0.94.5" % "provided",
       "cascading" % "cascading-hadoop" % cascadingVersion
     )
