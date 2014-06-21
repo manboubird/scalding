@@ -45,6 +45,12 @@ CONFIG_DEFAULT = begin
                    "commons-cli/commons-cli/1.2",
                    "commons-logging/commons-logging/1.1.1"
                    ],
+    "regex_match_jar_repositories" => [
+           #{ "jar_filename_regex" => "", "uri" => ENV['HOME'] + "/.m2/repository" },
+           #{ "jar_filename_regex" => "", "uri" => ENV['HOME'] + "/.ivy2/local" },
+           #{ "jar_filename_regex" => "", "uri" => ENV['HOME'] + "/.m2" },
+           { "jar_filename_regex" => "-cdh", "uri" => "https://repository.cloudera.com/artifactory/cloudera-repos" }
+    ],
     "module_jar_paths" => [], # jars for run time
     "default_mode" => "--hdfs"
   }
@@ -73,6 +79,7 @@ BUILDDIR=CONFIG["builddir"] || File.join(TMPDIR,"script-build")
 LOCALMEM=CONFIG["localmem"] || "3g"
 DEPENDENCIES=CONFIG["depends"] || []
 RSYNC_STATFILE_PREFIX = TMPDIR + "/scald.touch."
+REGEX_MATCH_JAR_REPOSITORIES=CONFIG["regex_match_jar_repositories"] || []
 
 #Recall that usage is of the form scald.rb [--jar jarfile] [--hdfs|--hdfs-local|--local|--print] [--print_cp] [--scalaversion version] job <job args>
 #This parser holds the {job <job args>} part of the command.
@@ -296,7 +303,10 @@ def dependency_to_url(dependency)
   group, artifact, version = dependency.split("/")
   jar_filename = dependency_to_jar(dependency)
   group_with_slash = group.split(".").join("/")
-  mvn_repo_url = /cdh/ =~ jar_filename ? "https://repository.cloudera.com/artifactory/cloudera-repos" : "http://repo1.maven.org/maven2"
+  mvn_repo_url = "http://repo1.maven.org/maven2"
+  REGEX_MATCH_JAR_REPOSITORIES.each{|v|
+    mvn_repo_url = v['uri'] if /#{v['jar_filename_regex']}/ =~ jar_filename
+  }
   "#{mvn_repo_url}/#{group_with_slash}/#{artifact}/#{version}/#{jar_filename}"
 end
 
