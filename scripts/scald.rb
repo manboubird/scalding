@@ -31,7 +31,9 @@ CONFIG_DEFAULT = begin
     "namespaces" => { "abj" => "com.twitter.ads.batch.job", "s" => "com.twitter.scalding" },
     "hadoop_opts" => { "mapred.reduce.tasks" => 20, #be conservative by default
                        "mapred.min.split.size" => "2000000000" }, #2 billion bytes!!!
-    "depends" => [ "org.apache.hadoop/hadoop-core/1.1.2",
+    "depends" => [ "org.apache.hadoop/hadoop-core/2.0.0-mr1-cdh4.5.0",
+                   "org.apache.hadoop/hadoop-common/2.0.0-cdh4.5.0",
+                   "org.apache.zookeeper/zookeeper/3.4.5-cdh4.5.0",
                    "commons-codec/commons-codec/1.8",
                    "commons-configuration/commons-configuration/1.9",
                    "org.codehaus.jackson/jackson-asl/0.9.5",
@@ -41,8 +43,15 @@ CONFIG_DEFAULT = begin
                    "log4j/log4j/1.2.15",
                    "commons-httpclient/commons-httpclient/3.1",
                    "commons-cli/commons-cli/1.2",
-                   "commons-logging/commons-logging/1.1.1",
-                   "org.apache.zookeeper/zookeeper/3.3.4" ],
+                   "commons-logging/commons-logging/1.1.1"
+                   ],
+    "regex_match_jar_repositories" => [
+           #{ "jar_filename_regex" => "", "uri" => ENV['HOME'] + "/.m2/repository" },
+           #{ "jar_filename_regex" => "", "uri" => ENV['HOME'] + "/.ivy2/local" },
+           #{ "jar_filename_regex" => "", "uri" => ENV['HOME'] + "/.m2" },
+           { "jar_filename_regex" => "-cdh", "uri" => "https://repository.cloudera.com/artifactory/cloudera-repos" }
+    ],
+    "module_jar_paths" => [], # jars for run time
     "default_mode" => "--hdfs"
   }
 end
@@ -56,6 +65,7 @@ CONFIG_RC = begin
   end
 
 CONFIG = CONFIG_DEFAULT.merge!(CONFIG_RC)
+repo_root=CONFIG["repo_root"] if CONFIG["repo_root"]
 
 BUILDFILE = open(CONFIG["repo_root"] + "/project/Build.scala").read
 VERSIONFILE = open(CONFIG["repo_root"] + "/version.sbt").read
@@ -70,6 +80,7 @@ BUILDDIR=CONFIG["builddir"] || File.join(TMPDIR,"script-build")
 LOCALMEM=CONFIG["localmem"] || "3g"
 DEPENDENCIES=CONFIG["depends"] || []
 RSYNC_STATFILE_PREFIX = TMPDIR + "/scald.touch."
+REGEX_MATCH_JAR_REPOSITORIES=CONFIG["regex_match_jar_repositories"] || []
 
 #Recall that usage is of the form scald.rb [--jar jarfile] [--hdfs|--hdfs-local|--local|--print] [--print_cp] [--scalaversion version] job <job args>
 #This parser holds the {job <job args>} part of the command.
@@ -223,6 +234,10 @@ end
 
 MODULEJARPATHS=[]
 
+if CONFIG["module_jar_paths"]
+  MODULEJARPATHS.concat(CONFIG["module_jar_paths"])
+end
+
 if OPTS[:avro]
   MODULEJARPATHS.push(repo_root + "/scalding-avro/target/scala-#{SHORT_SCALA_VERSION}/scalding-avro-assembly-#{SCALDING_VERSION}.jar")
 end
@@ -312,7 +327,11 @@ def dependency_to_url(dependency)
   group, artifact, version = dependency.split("/")
   jar_filename = dependency_to_jar(dependency)
   group_with_slash = group.split(".").join("/")
-  "http://repo1.maven.org/maven2/#{group_with_slash}/#{artifact}/#{version}/#{jar_filename}"
+  mvn_repo_url = "http://repo1.maven.org/maven2"
+  REGEX_MATCH_JAR_REPOSITORIES.each{|v|
+    mvn_repo_url = v['uri'] if /#{v['jar_filename_regex']}/ =~ jar_filename
+  }
+  "#{mvn_repo_url}/#{group_with_slash}/#{artifact}/#{version}/#{jar_filename}"
 end
 
 #Convert a maven dependency to the name of its jar file.
